@@ -16,19 +16,14 @@ export default function Lobby() {
   const username = searchParams.get("user") || "Guest";
 
   if (!roomName) {
-    return (
-      <p className="text-white text-center mt-10">
-        Invalid room
-      </p>
-    );
+    return <p className="text-white text-center mt-10">Invalid room</p>;
   }
 
   return (
     <main className="min-h-screen bg-black flex items-center justify-center">
       <div className="w-full max-w-lg bg-[#111] rounded-xl p-6">
         <h2 className="text-white text-xl mb-4 text-center">
-          Ready to join{" "}
-          <span className="text-[#FF6A2D]">{roomName}</span>
+          Ready to join <span className="text-[#FF6A2D]">{roomName}</span>
         </h2>
 
         <PreJoin
@@ -38,8 +33,9 @@ export default function Lobby() {
             videoEnabled: true,
           }}
           onSubmit={(values) => {
+            // ✅ THIS is the missing piece
             router.push(
-              `/${roomName}?user=${encodeURIComponent(values.username)}`
+              `/${roomName}?user=${encodeURIComponent(values.username)}&audio=${values.audioEnabled}&video=${values.videoEnabled}`
             );
           }}
         />
