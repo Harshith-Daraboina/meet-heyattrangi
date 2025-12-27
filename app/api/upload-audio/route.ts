@@ -1,4 +1,4 @@
-import { supabase } from "@/lib/supabase";
+import { getSupabaseAdmin } from "@/lib/supabase";
 import { NextResponse } from "next/server";
 
 export async function POST(req: Request) {
@@ -17,6 +17,7 @@ export async function POST(req: Request) {
         const timestamp = Date.now();
         const path = `recordings/${roomName}-${timestamp}.webm`;
 
+        const supabase = getSupabaseAdmin();
         const { data, error } = await supabase.storage
             .from("meeting-recordings")
             .upload(path, file, {

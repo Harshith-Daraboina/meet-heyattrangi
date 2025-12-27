@@ -5,7 +5,7 @@ import {
     S3Upload,
     EncodedFileType,
 } from "livekit-server-sdk";
-import { supabase } from "@/lib/supabase";
+import { getSupabaseAdmin } from "@/lib/supabase";
 
 
 console.log("LIVEKIT_URL:", process.env.LIVEKIT_URL);
@@ -59,6 +59,7 @@ export async function POST(req: Request) {
     );
 
     // ✅ Save metadata in DB
+    const supabase = getSupabaseAdmin();
     await supabase.from("meetings").insert({
         room_name: roomName,
         audio_path: storagePath,

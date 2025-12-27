@@ -121,7 +121,7 @@ export default function RoomPage() {
       video
       audio
       onDisconnected={() => router.push(`/${roomName}/left`)}
-      className="h-screen"
+      className="h-screen w-screen overflow-hidden bg-black"
     >
       {/* 🔹 Top bar */}
       <div className="absolute top-4 right-4 z-[100] flex gap-3">
@@ -145,7 +145,9 @@ export default function RoomPage() {
       </div>
 
       {/* 🔹 LiveKit UI */}
-      <VideoConference />
+      <div className="h-full w-full overflow-hidden">
+        <VideoConference />
+      </div>
 
     </LiveKitRoom>
   );
