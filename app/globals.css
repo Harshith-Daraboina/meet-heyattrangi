@@ -19,7 +19,14 @@
   }
 }
 
+/* 🔹 Global Resets */
+html,
 body {
+  height: 100%;
+  width: 100%;
+  margin: 0;
+  overflow: hidden;
+  /* 🔑 prevents scrolling bugs */
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
@@ -27,16 +34,75 @@ body {
 
 /* 🔹 LiveKit Customizations */
 .lk-video-conference {
+  position: relative;
   height: 100%;
+  width: 100%;
+  overflow: hidden;
 }
 
+/* Base Grid - shrinks to make room for controls */
+.lk-grid-layout {
+  height: calc(100% - 72px);
+  /* 🔑 Key fix */
+  width: 100%;
+  display: grid;
+  gap: 12px;
+  padding-bottom: 8px;
+  /* Extra padding above bar */
+}
+
+/* Fix control bar to bottom */
+.lk-control-bar {
+  position: absolute !important;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 72px !important;
+  z-index: 20;
+  background: rgba(0, 0, 0, 0.9);
+  padding: 0 !important;
+  /* Reset padding if needed */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 1 participant → full screen */
+.grid-wrapper[data-participants="1"] .lk-grid-layout {
+  grid-template-columns: 1fr;
+  grid-template-rows: 1fr;
+}
+
+/* 2 participants → 50 / 50 */
+.grid-wrapper[data-participants="2"] .lk-grid-layout {
+  grid-template-columns: repeat(2, 1fr);
+  grid-template-rows: 1fr;
+}
+
+/* 3–4 participants → 2x2 (25% each) */
+.grid-wrapper[data-participants="3"] .lk-grid-layout,
+.grid-wrapper[data-participants="4"] .lk-grid-layout {
+  grid-template-columns: repeat(2, 1fr);
+  grid-template-rows: repeat(2, 1fr);
+}
+
+/* Default fallback for 5+ */
+.lk-grid-layout {
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+}
+
+/* Prevent tiles from stretching weirdly */
 .lk-participant-tile {
+  min-height: 0;
+  min-width: 0;
   border-radius: 12px;
   overflow: hidden;
   background: #111;
 }
 
-/* Max 3–4 columns (prevents tiny tiles) */
-.lk-grid-layout {
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+.lk-participant-tile video {
+  object-fit: contain !important;
+  width: 100%;
+  height: 100%;
+  background: black;
 }
