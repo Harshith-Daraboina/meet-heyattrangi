@@ -1,4 +1,4 @@
-import { getSupabaseAdmin } from "@/lib/supabase";
+import cloudinary from "@/lib/cloudinary";
 import { NextResponse } from "next/server";
 
 export async function POST(req: Request) {
@@ -14,30 +14,46 @@ export async function POST(req: Request) {
             );
         }
 
-        const timestamp = Date.now();
-        const path = `recordings/${roomName}-${timestamp}.webm`;
+        // Convert File → Buffer
+        const arrayBuffer = await file.arrayBuffer();
+        const buffer = Buffer.from(arrayBuffer);
 
-        const supabase = getSupabaseAdmin();
-        const { data, error } = await supabase.storage
-            .from("meeting-recordings")
-            .upload(path, file, {
-                contentType: "audio/webm",
-                upsert: false,
-            });
+        // Upload to Cloudinary
+        const uploadResult = await new Promise<any>((resolve, reject) => {
+            cloudinary.uploader
+                .upload_stream(
+                    {
+                        resource_type: "video", // REQUIRED for audio uploads
+                        folder: "meeting-recordings",
+                        public_id: `${roomName}-${Date.now()}`,
+                        format: "mp3",          // Convert to mp3
+                        audio_codec: "mp3",
+                        audio_frequency: 22050, // Voice-optimized frequency
+                        bit_rate: "64k",        // Voice-optimized bitrate
+                    },
+                    (error, result) => {
+                        if (error) reject(error);
+                        else resolve(result);
+                    }
+                )
+                .end(buffer);
+        });
 
-        if (error) {
-            console.error("Supabase upload error:", error);
-            return NextResponse.json(
-                { error: "Failed to upload to storage", details: error.message },
-                { status: 500 }
-            );
-        }
+        // Determine final URL. Ideally 'secure_url' is the mp3 one.
+        // Cloudinary returns the url to the resource. We specified format: mp3, so it should be .mp3
 
-        return NextResponse.json({ success: true, path: data.path });
+        return NextResponse.json({
+            success: true,
+            url: uploadResult.secure_url,
+            publicId: uploadResult.public_id,
+            duration: uploadResult.duration,
+            format: uploadResult.format,
+            bytes: uploadResult.bytes
+        });
     } catch (err: any) {
-        console.error("Upload handler error:", err);
+        console.error("Cloudinary upload error:", err);
         return NextResponse.json(
-            { error: "Internal server error", details: err.message },
+            { error: "Upload failed", details: err.message },
             { status: 500 }
         );
     }

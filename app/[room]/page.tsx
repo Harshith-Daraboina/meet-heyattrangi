@@ -12,6 +12,9 @@ import {
   useTracks, // Added
   Chat, // Added
   useLayoutContext, // Added
+  FocusLayout, // Added
+  CarouselLayout, // Added
+  usePinnedTracks, // Added
 } from "@livekit/components-react";
 import "@livekit/components-styles";
 import { RoomEvent, Participant, Track } from "livekit-client"; // Added Track
@@ -30,16 +33,20 @@ interface CustomConferenceProps {
 function CustomConference({ isHost, isRecording, onStartRecording, onStopRecording }: CustomConferenceProps) {
   const cameraTracks = useTracks([Track.Source.Camera], { onlySubscribed: true });
   const screenTracks = useTracks([Track.Source.ScreenShare], { onlySubscribed: true });
-  const { widget } = useLayoutContext();
+  const layoutContext = useLayoutContext(); // Get full context
+  const { widget } = layoutContext;
+
+  const pinnedTracks = usePinnedTracks(layoutContext);
 
   const isScreenSharing = screenTracks.length > 0;
+  const isFocusing = pinnedTracks.length > 0;
   const showChat = widget.state?.showChat;
 
   const isMobile = typeof window !== "undefined" && /Android|iPhone|iPad/i.test(navigator.userAgent);
 
   return (
     <div className="h-[100dvh] w-full flex flex-col bg-black overflow-hidden relative">
-      {/* Screen Share */}
+      {/* Screen Share (Prioritized) */}
       {isScreenSharing && (
         <div className="flex-1 flex items-center justify-center bg-black">
           {screenTracks.map((track) => (
@@ -52,33 +59,55 @@ function CustomConference({ isHost, isRecording, onStartRecording, onStopRecordi
         </div>
       )}
 
-      {/* Camera Grid */}
+      {/* Main Content (Focus or Grid) */}
       <div className={`${isScreenSharing ? "h-[30%]" : "flex-1"} overflow-y-auto`}>
-        <GridLayout tracks={cameraTracks} className="h-full w-full">
-          <ParticipantTile />
-        </GridLayout>
+        {!isScreenSharing && isFocusing ? (
+          <div className="h-full w-full flex flex-col md:flex-row">
+            <div className="flex-1 h-[70%] md:h-full">
+              <FocusLayout trackRef={pinnedTracks[0]} className="h-full w-full" />
+            </div>
+            <div className="h-[30%] md:h-full md:w-[20%] overflow-y-auto bg-[#111] p-2">
+              {/* Pass all tracks to Carousel for stability. Filtering out the pinned track caused runtime errors when switching focus. */}
+              <CarouselLayout tracks={cameraTracks}>
+                <ParticipantTile />
+              </CarouselLayout>
+            </div>
+          </div>
+        ) : (
+          <GridLayout tracks={cameraTracks} className="h-full w-full">
+            <ParticipantTile />
+          </GridLayout>
+        )}
       </div>
 
-      {/* Chat Overlay */}
-      {showChat && (
-        <div className="absolute top-0 right-0 h-[calc(100%-72px)] w-full sm:w-80 bg-[#111] border-l border-[#333] z-50">
-          <Chat />
-        </div>
-      )}
+      {/* Chat Overlay (Persistent for History) */}
+      <div
+        className={`absolute top-0 right-0 h-[calc(100%-72px)] w-full sm:w-96 glass-panel z-50 overflow-hidden transition-all duration-300 ease-in-out transform ${showChat
+          ? "translate-x-0 opacity-100"
+          : "translate-x-full opacity-0 pointer-events-none"
+          }`}
+      >
+        <Chat />
+      </div>
 
       {/* Controls */}
-      <div className="h-[72px] shrink-0 bg-black border-t border-[#333] flex items-center justify-center gap-4">
-        {/* Host Recording Button */}
-        {isHost && (
+      <div className="h-[72px] shrink-0 bg-black border-t border-[#333] flex items-center justify-center gap-4 z-[100] relative">
+        <div className="flex items-center justify-center mr-2">
           <button
             onClick={isRecording ? onStopRecording : onStartRecording}
-            className={`p-3 rounded-full transition-colors ${isRecording ? "bg-red-600 hover:bg-red-700" : "bg-gray-800 hover:bg-gray-700"
+            className={`flex items-center gap-2 px-3 py-2 rounded-md font-semibold transition-colors ${isRecording
+              ? "bg-red-600 hover:bg-red-700 text-white animate-pulse"
+              : "bg-[#1f1f1f] hover:bg-[#2f2f2f] text-white border border-[#333]"
               }`}
             title={isRecording ? "Stop Recording" : "Start Recording"}
           >
-            <div className={`w-5 h-5 rounded-full ${isRecording ? "animate-pulse bg-white" : "bg-red-500"}`} />
+            <div
+              className={`w-3 h-3 rounded-full ${isRecording ? "bg-white" : "bg-red-500"
+                }`}
+            />
+            <span className="text-sm">{isRecording ? "REC" : "Record"}</span>
           </button>
-        )}
+        </div>
 
         <ControlBar
           controls={{
