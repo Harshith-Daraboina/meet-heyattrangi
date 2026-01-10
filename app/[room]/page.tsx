@@ -15,6 +15,7 @@ import {
   FocusLayout, // Added
   CarouselLayout, // Added
   usePinnedTracks, // Added
+  RoomAudioRenderer, // Added
 } from "@livekit/components-react";
 import "@livekit/components-styles";
 import { RoomEvent, Participant, Track } from "livekit-client"; // Added Track
@@ -118,6 +119,12 @@ function CustomConference({ isHost, isRecording, onStartRecording, onStopRecordi
             leave: true,
           }}
         />
+
+        {/* Branding (Bottom Right) */}
+        <div className="absolute right-6 top-1/2 -translate-y-1/2 hidden md:flex flex-col items-end pointer-events-none opacity-80">
+          <span className="text-white font-bold text-lg leading-tight tracking-wide">Hey Attrangi</span>
+          <span className="text-gray-400 text-[10px] tracking-wider uppercase">well monitored therapy platform</span>
+        </div>
       </div>
     </div>
   );
@@ -263,7 +270,9 @@ function RoomPageContent() { // Renamed and wrapped existing content
 
           </div>
 
+
           <RoomEvents router={router} />
+          <RoomAudioRenderer />
         </LayoutContextProvider>
       </LiveKitRoom>
     </div>
