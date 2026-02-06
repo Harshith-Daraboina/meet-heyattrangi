@@ -16,9 +16,9 @@ export default function Home() {
   }
 
   return (
-    <main className="relative min-h-screen flex flex-col items-center justify-center p-4 sm:p-6 overflow-hidden">
-      {/* Background Image */}
-      <div className="absolute inset-0 z-0">
+    <main className="relative h-screen w-full overflow-y-auto overflow-x-hidden">
+      {/* Background Image - Fixed so it doesn't scroll */}
+      <div className="fixed inset-0 z-0">
         <Image
           src="/images/mental-health-bg2.jpg"
           alt="Peaceful Background"
@@ -30,88 +30,91 @@ export default function Home() {
         <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/30 to-transparent" />
       </div>
 
-      {/* Main Layout Container */}
-      <div className="relative z-10 w-full max-w-7xl mx-auto grid lg:grid-cols-12 gap-8 lg:gap-12 items-center">
+      {/* Main Layout Container - Min height for vertical alignment */}
+      <div className="relative z-10 w-full min-h-full flex flex-col justify-center p-4 sm:p-6">
+        <div className="w-full max-w-7xl mx-auto grid lg:grid-cols-12 gap-8 lg:gap-12 items-center">
 
-        {/* Left Col: Branding & Editorial Content (Spans 7) */}
-        <div className="lg:col-span-7 space-y-6 sm:space-y-8 text-white text-center lg:text-left">
-          <div className="space-y-4">
-            <div className="inline-flex items-center gap-3 bg-white/10 backdrop-blur-md px-3 py-1.5 sm:px-4 sm:py-2 rounded-full border border-white/10">
-              <Image src="/images/logo-main.png" alt="Hey Attrangi" width={32} height={32} className="w-6 h-6 sm:w-8 sm:h-8 object-contain" />
-              <span className="font-semibold text-xs sm:text-sm tracking-wide uppercase text-[#FFD285]">Mental Health Reimagined</span>
-            </div>
-
-            <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold leading-tight tracking-tight drop-shadow-xl">
-              Hey <span className="text-[#FF6A2D]">Attrangi</span> Meet
-            </h1>
-
-            <p className="text-lg sm:text-xl md:text-2xl text-white/90 font-light max-w-2xl leading-relaxed drop-shadow-md mx-auto lg:mx-0">
-              Your safe space for connection and healing. <br className="hidden md:block" />
-              <span className="font-medium text-[#FFD285]">AI-integrated therapy</span> for the modern mind.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 pt-4 text-left">
-            <FeatureCard
-              icon={<HeartIcon />}
-              title="Neurodivergent Support"
-              description="Specialized connection for unique minds."
-            />
-            <FeatureCard
-              icon={<ClockIcon />}
-              title="Flexible Pricing"
-              description="Transparent hourly cost structure."
-            />
-            <FeatureCard
-              icon={<BrainIcon />}
-              title="AI Integrated"
-              description="Modern tech & research for better care."
-            />
-          </div>
-        </div>
-
-        {/* Right Col: Login Form (Spans 5) */}
-        <div className="lg:col-span-5 flex justify-center lg:justify-end w-full">
-          <div className="w-full max-w-sm sm:max-w-md bg-white/10 backdrop-blur-xl rounded-3xl p-6 sm:p-8 border border-white/20 shadow-2xl relative overflow-hidden group mx-auto">
-
-            {/* Decorative Glow */}
-            <div className="absolute -top-20 -right-20 w-40 h-40 bg-[#FF6A2D]/30 rounded-full blur-3xl pointer-events-none group-hover:bg-[#FF6A2D]/40 transition-all duration-700" />
-
-            <h2 className="text-2xl sm:text-3xl font-bold text-white mb-2 relative z-10">Welcome Back</h2>
-            <p className="text-white/60 mb-6 sm:mb-8 relative z-10 text-sm sm:text-base">Enter your details to join the session</p>
-
-            <form onSubmit={goToLobby} className="space-y-4 sm:space-y-6 relative z-10">
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-white/80 ml-1">Display Name</label>
-                <input
-                  placeholder="e.g. Alex"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  className="w-full px-4 sm:px-5 py-3 sm:py-4 rounded-2xl bg-black/20 border border-white/10 text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-[#FF6A2D] focus:border-transparent transition-all backdrop-blur-sm"
-                />
+          {/* Left Col: Branding & Editorial Content (Spans 7) */}
+          <div className="lg:col-span-7 space-y-6 sm:space-y-8 text-white text-center lg:text-left pt-8 lg:pt-0">
+            <div className="space-y-4">
+              <div className="inline-flex items-center gap-3 bg-white/10 backdrop-blur-md px-3 py-1.5 sm:px-4 sm:py-2 rounded-full border border-white/10">
+                <Image src="/images/logo-main.png" alt="Hey Attrangi" width={32} height={32} className="w-6 h-6 sm:w-8 sm:h-8 object-contain" />
+                <span className="font-semibold text-xs sm:text-sm tracking-wide uppercase text-[#FFD285]">Mental Health Reimagined</span>
               </div>
 
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-white/80 ml-1">Room Name</label>
-                <input
-                  placeholder="e.g. Therapy-Room-1"
-                  value={roomName}
-                  onChange={(e) => setRoomName(e.target.value)}
-                  className="w-full px-4 sm:px-5 py-3 sm:py-4 rounded-2xl bg-black/20 border border-white/10 text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-[#FF6A2D] focus:border-transparent transition-all backdrop-blur-sm"
-                />
-              </div>
+              <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold leading-tight tracking-tight drop-shadow-xl">
+                Hey <span className="text-[#FF6A2D]">Attrangi</span> Meet
+              </h1>
 
-              <button className="w-full bg-[#FF6A2D] hover:bg-[#ff5500] text-white text-base sm:text-lg py-3 sm:py-4 rounded-2xl font-bold tracking-wide shadow-lg shadow-[#FF6A2D]/20 transform transition-all active:scale-[0.98] flex items-center justify-center gap-2">
-                Continue <ArrowRightIcon />
-              </button>
-            </form>
+              <p className="text-lg sm:text-xl md:text-2xl text-white/90 font-light max-w-2xl leading-relaxed drop-shadow-md mx-auto lg:mx-0">
+                Your safe space for connection and healing. <br className="hidden md:block" />
+                <span className="font-medium text-[#FFD285]">AI-integrated therapy</span> for the modern mind.
+              </p>
+            </div>
 
-            <div className="mt-6 sm:mt-8 pt-6 border-t border-white/10 text-center">
-              <p className="text-[10px] sm:text-xs text-white/40 uppercase tracking-widest font-semibold">Secure • Private • Encrypted</p>
+            {/* Hidden on Mobile as requested ("remove extra items") */}
+            <div className="hidden sm:grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 pt-4 text-left">
+              <FeatureCard
+                icon={<HeartIcon />}
+                title="Neurodivergent Support"
+                description="Specialized connection for unique minds."
+              />
+              <FeatureCard
+                icon={<ClockIcon />}
+                title="Flexible Pricing"
+                description="Transparent hourly cost structure."
+              />
+              <FeatureCard
+                icon={<BrainIcon />}
+                title="AI Integrated"
+                description="Modern tech & research for better care."
+              />
             </div>
           </div>
-        </div>
 
+          {/* Right Col: Login Form (Spans 5) */}
+          <div className="lg:col-span-5 flex justify-center lg:justify-end w-full pb-8 lg:pb-0">
+            <div className="w-full max-w-sm sm:max-w-md bg-white/10 backdrop-blur-xl rounded-3xl p-6 sm:p-8 border border-white/20 shadow-2xl relative overflow-hidden group mx-auto">
+
+              {/* Decorative Glow */}
+              <div className="absolute -top-20 -right-20 w-40 h-40 bg-[#FF6A2D]/30 rounded-full blur-3xl pointer-events-none group-hover:bg-[#FF6A2D]/40 transition-all duration-700" />
+
+              <h2 className="text-2xl sm:text-3xl font-bold text-white mb-2 relative z-10">Welcome Back</h2>
+              <p className="text-white/60 mb-6 sm:mb-8 relative z-10 text-sm sm:text-base">Enter your details to join the session</p>
+
+              <form onSubmit={goToLobby} className="space-y-4 sm:space-y-6 relative z-10">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-white/80 ml-1">Display Name</label>
+                  <input
+                    placeholder="e.g. Alex"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    className="w-full px-4 sm:px-5 py-3 sm:py-4 rounded-2xl bg-black/20 border border-white/10 text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-[#FF6A2D] focus:border-transparent transition-all backdrop-blur-sm"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-white/80 ml-1">Room Name</label>
+                  <input
+                    placeholder="e.g. Therapy-Room-1"
+                    value={roomName}
+                    onChange={(e) => setRoomName(e.target.value)}
+                    className="w-full px-4 sm:px-5 py-3 sm:py-4 rounded-2xl bg-black/20 border border-white/10 text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-[#FF6A2D] focus:border-transparent transition-all backdrop-blur-sm"
+                  />
+                </div>
+
+                <button className="w-full bg-[#FF6A2D] hover:bg-[#ff5500] text-white text-base sm:text-lg py-3 sm:py-4 rounded-2xl font-bold tracking-wide shadow-lg shadow-[#FF6A2D]/20 transform transition-all active:scale-[0.98] flex items-center justify-center gap-2">
+                  Continue <ArrowRightIcon />
+                </button>
+              </form>
+
+              <div className="mt-6 sm:mt-8 pt-6 border-t border-white/10 text-center">
+                <p className="text-[10px] sm:text-xs text-white/40 uppercase tracking-widest font-semibold">Secure • Private • Encrypted</p>
+              </div>
+            </div>
+          </div>
+
+        </div>
       </div>
     </main>
   );
