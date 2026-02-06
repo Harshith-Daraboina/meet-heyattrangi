@@ -13,6 +13,7 @@
     "@livekit/components-styles": "^1.2.0",
     "@supabase/supabase-js": "^2.89.0",
     "cloudinary": "^2.8.0",
+    "firebase": "^12.7.0",
     "livekit-client": "^2.16.1",
     "livekit-server-sdk": "^2.15.0",
     "next": "16.0.10",
