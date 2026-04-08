@@ -21,7 +21,7 @@ export default function Lobby() {
 
   return (
     <main className="min-h-screen bg-black flex items-center justify-center">
-      <div className="w-full max-w-lg bg-[#111] rounded-xl p-6">
+      <div className="w-full max-w-lg bg-[#111] rounded-xl p-6" data-lk-theme="default">
         <h2 className="text-white text-xl mb-4 text-center">
           Ready to join <span className="text-[#FF6A2D]">{roomName}</span>
         </h2>
