@@ -306,3 +306,12 @@ body {
 .lk-join-button:hover {
   background-color: #e55a1f !important;
 }
+
+/* 🔹 Hide scrollbars globally where applied */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}

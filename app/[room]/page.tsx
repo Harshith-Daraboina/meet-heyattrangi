@@ -23,6 +23,7 @@ import "@livekit/components-styles";
 import { RoomEvent, Participant, Track } from "livekit-client"; // Added Track
 
 import { useEffect, useState, useRef, Suspense } from "react"; // Added Suspense
+import AskPragya from "../components/AskPragya";
 import { useParams, useSearchParams, useRouter } from "next/navigation";
 import { Toaster, toast } from "sonner";
 
@@ -43,6 +44,7 @@ function CustomConference({ isHost, isRecording, onStartRecording, onStopRecordi
   const activeSpeakers = useSpeakingParticipants();
   const participants = useParticipants();
   const [showParticipants, setShowParticipants] = useState(false);
+  const [showPragya, setShowPragya] = useState(false);
   const [lastSpeakerSid, setLastSpeakerSid] = useState<string | null>(null);
 
   // Remember the last person who spoke
@@ -149,6 +151,9 @@ function CustomConference({ isHost, isRecording, onStartRecording, onStopRecordi
         </div>
       </div>
 
+      {/* Ask Pragya Panel */}
+      <AskPragya open={showPragya} onClose={() => setShowPragya(false)} />
+
       {/* Controls */}
       <div className="h-[72px] shrink-0 bg-black border-t border-[#333] flex items-center justify-center gap-4 z-[100] relative">
         <div className="flex items-center justify-center mr-2">
@@ -188,6 +193,22 @@ function CustomConference({ isHost, isRecording, onStartRecording, onStopRecordi
              </svg>
              <span className="hidden sm:inline">People</span>
              <div className="px-1.5 py-0.5 bg-[#333] rounded-md text-[11px] font-bold ml-1">{participants.length}</div>
+          </button>
+          {/* Ask Pragya button */}
+          <button
+            onClick={() => setShowPragya(!showPragya)}
+            title="Ask Pragya – AI Assistant"
+            className={`flex items-center gap-2 px-3 py-2 rounded-lg font-semibold transition-all duration-300 border ${
+              showPragya
+                ? "bg-[#FF6A2D]/20 border-[#FF6A2D]/60 text-[#FF6A2D] shadow-[0_0_18px_rgba(255,106,45,0.35)]"
+                : "bg-[#1a1a1a] hover:bg-[#2a2a2a] border-[#FF6A2D]/40 text-[#FF6A2D] hover:shadow-[0_0_14px_rgba(255,106,45,0.25)]"
+            }`}
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12 2L13.09 8.26L19 6L14.74 10.91L21 12L14.74 13.09L19 18L13.09 15.74L12 22L10.91 15.74L5 18L9.26 13.09L3 12L9.26 10.91L5 6L10.91 8.26L12 2Z"
+                stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+            <span className="hidden sm:inline text-sm">Ask Pragya</span>
           </button>
         </div>
 
