@@ -38,7 +38,7 @@ export default function Home() {
           <div className="lg:col-span-7 space-y-6 sm:space-y-8 text-white text-center lg:text-left pt-8 lg:pt-0">
             <div className="space-y-4">
               <div className="inline-flex items-center gap-3 bg-white/10 backdrop-blur-md px-3 py-1.5 sm:px-4 sm:py-2 rounded-full border border-white/10">
-                <Image src="/images/logo-main.png" alt="Hey Attrangi" width={32} height={32} className="w-6 h-6 sm:w-8 sm:h-8 object-contain" />
+                <Image src="/images/icon.png" alt="Hey Attrangi" width={32} height={32} className="w-6 h-6 sm:w-8 sm:h-8 object-contain" />
                 <span className="font-semibold text-xs sm:text-sm tracking-wide uppercase text-[#FFD285]">Mental Health Reimagined</span>
               </div>
 

@@ -11,21 +11,18 @@ interface Message {
   ts: number;
 }
 
-interface GeminiContent {
-  role: "user" | "model";
-  parts: { text: string }[];
-}
+
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
-const GEMINI_API_KEY = process.env.NEXT_PUBLIC_GEMINI_API_KEY!;
-const GEMINI_MODEL = "gemini-1.5-flash";
+const GROQ_API_KEY = process.env.NEXT_PUBLIC_GROQ_API_KEY!;
+const GROQ_MODEL = "llama-3.3-70b-versatile";
 const STORAGE_KEY = "pragya_context";
-const MAX_CONTEXT = 20; // messages kept in sessionStorage
+const MAX_CONTEXT = 20;
 
-const SYSTEM_PROMPT = `You are Pragya, an empathetic AI mental-health assistant built into the Hey Attrangi Meet therapy platform. 
-You help users reflect on their emotions, offer coping strategies, and provide supportive conversation during and after therapy sessions.
-Keep answers concise, warm, and non-clinical. Never diagnose. If someone is in crisis, gently urge them to call a helpline.`;
+const SYSTEM_PROMPT = `You are Pragya, a helpful AI assistant built into the Hey Attrangi Meet platform.
+Your goal is to assist participants by answering questions, providing summaries of the meeting chat, and being a general helpful presence.
+Keep responses concise, clear, and professional. You are here to help with the flow of the meeting and answer any general queries.`;
 
 const MOCK_RESPONSES = [
   "I hear you. It sounds like you're going through a lot right now. I'm here to listen.",
@@ -67,40 +64,43 @@ function saveContext(msgs: Message[]) {
   sessionStorage.setItem(STORAGE_KEY, JSON.stringify(trimmed));
 }
 
-function buildGeminiHistory(msgs: Message[]): GeminiContent[] {
+function buildGroqHistory(msgs: Message[]): { role: string; content: string }[] {
   return msgs.map((m) => ({
-    role: m.role === "user" ? "user" : "model",
-    parts: [{ text: m.text }],
+    role: m.role === "user" ? "user" : "assistant",
+    content: m.text,
   }));
 }
 
-async function callGemini(history: GeminiContent[], userText: string): Promise<string> {
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`;
+async function callGroq(history: { role: string; content: string }[], userText: string): Promise<string> {
+  const url = "https://api.groq.com/openai/v1/chat/completions";
 
-  const contents: GeminiContent[] = [
-    // Inject system prompt as the very first user turn (Gemini 1.5 doesn't have systemInstruction in all regions)
-    { role: "user", parts: [{ text: SYSTEM_PROMPT }] },
-    { role: "model", parts: [{ text: "Understood. I'm Pragya, and I'm here to help." }] },
+  const messages = [
+    { role: "system", content: SYSTEM_PROMPT },
     ...history,
-    { role: "user", parts: [{ text: userText }] },
+    { role: "user", content: userText },
   ];
 
   const res = await fetch(url, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ contents }),
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${GROQ_API_KEY}`,
+    },
+    body: JSON.stringify({
+      model: GROQ_MODEL,
+      messages,
+      temperature: 0.7,
+      max_tokens: 1024,
+    }),
   });
 
   if (!res.ok) {
     const err = await res.text();
-    throw new Error(`Gemini API error ${res.status}: ${err}`);
+    throw new Error(`Groq API error ${res.status}: ${err}`);
   }
 
   const data = await res.json();
-  if (data.error) {
-    throw new Error(data.error.message || "Unknown Gemini error");
-  }
-  return data.candidates?.[0]?.content?.parts?.[0]?.text ?? "Sorry, I couldn't generate a response.";
+  return data.choices?.[0]?.message?.content ?? "Sorry, I couldn't generate a response.";
 }
 
 // ─── Speech Recognition hook ──────────────────────────────────────────────────
@@ -193,7 +193,7 @@ export default function AskPragya({ open, onClose }: AskPragyaProps) {
       setLoading(true);
 
       try {
-        const history = buildGeminiHistory(messages); // history before this message
+        const history = buildGroqHistory(messages); // history before this message
         
         // ─── Extract Meeting Context for Summarization ───
         const isSummaryReq = /summarize|summary|what happened|recap/i.test(trimmed);
@@ -208,9 +208,9 @@ export default function AskPragya({ open, onClose }: AskPragyaProps) {
 
         let reply = "";
         try {
-          reply = await callGemini(history, finalUserText);
+          reply = await callGroq(history, finalUserText);
         } catch (apiError) {
-          console.warn("Gemini API failed, using mock fallback:", apiError);
+          console.warn("Groq API failed, using mock fallback:", apiError);
           await new Promise(r => setTimeout(r, 800));
           reply = getMockResponse(isSummaryReq);
         }
@@ -259,13 +259,15 @@ export default function AskPragya({ open, onClose }: AskPragyaProps) {
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#FF6A2D] to-[#ff4500] flex items-center justify-center shadow-lg shadow-[#FF6A2D]/30">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M12 2L13.09 8.26L19 6L14.74 10.91L21 12L14.74 13.09L19 18L13.09 15.74L12 22L10.91 15.74L5 18L9.26 13.09L3 12L9.26 10.91L5 6L10.91 8.26L12 2Z"
-                  stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                <rect x="2" y="2" width="9" height="9" rx="2" fill="white"/>
+                <rect x="13" y="2" width="9" height="9" rx="2" fill="white"/>
+                <rect x="2" y="13" width="9" height="9" rx="2" fill="white"/>
+                <rect x="13" y="13" width="9" height="9" rx="2" fill="white"/>
               </svg>
             </div>
             <div>
               <h3 className="text-white font-bold text-base leading-none">Pragya</h3>
-              <p className="text-[#FF6A2D] text-[11px] mt-0.5">AI Mental Health Assistant</p>
+              <p className="text-[#FF6A2D] text-[11px] mt-0.5">AI Meeting Assistant</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -295,12 +297,14 @@ export default function AskPragya({ open, onClose }: AskPragyaProps) {
             <div className="flex flex-col items-center justify-center h-full text-center px-6 gap-4">
               <div className="w-16 h-16 rounded-full bg-[#FF6A2D]/10 flex items-center justify-center border border-[#FF6A2D]/20">
                 <svg width="30" height="30" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M12 2L13.09 8.26L19 6L14.74 10.91L21 12L14.74 13.09L19 18L13.09 15.74L12 22L10.91 15.74L5 18L9.26 13.09L3 12L9.26 10.91L5 6L10.91 8.26L12 2Z"
-                    stroke="#FF6A2D" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                  <rect x="2" y="2" width="9" height="9" rx="2" fill="#FF6A2D"/>
+                  <rect x="13" y="2" width="9" height="9" rx="2" fill="#FF6A2D"/>
+                  <rect x="2" y="13" width="9" height="9" rx="2" fill="#FF6A2D"/>
+                  <rect x="13" y="13" width="9" height="9" rx="2" fill="#FF6A2D"/>
                 </svg>
               </div>
               <p className="text-gray-400 text-sm leading-relaxed">
-                Hi! I'm <span className="text-[#FF6A2D] font-semibold">Pragya</span>, your AI companion for this session. How are you feeling today?
+                Hi! I'm <span className="text-[#FF6A2D] font-semibold">Pragya</span>, your AI assistant for this meeting. How can I help you today?
               </p>
               <p className="text-gray-600 text-xs">You can type or use the mic to speak to me.</p>
             </div>
@@ -311,8 +315,10 @@ export default function AskPragya({ open, onClose }: AskPragyaProps) {
               {m.role === "pragya" && (
                 <div className="w-7 h-7 rounded-full bg-gradient-to-br from-[#FF6A2D] to-[#ff4500] flex items-center justify-center mr-2 mt-1 shrink-0">
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
-                    <path d="M12 2L13.09 8.26L19 6L14.74 10.91L21 12L14.74 13.09L19 18L13.09 15.74L12 22L10.91 15.74L5 18L9.26 13.09L3 12L9.26 10.91L5 6L10.91 8.26L12 2Z"
-                      stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    <rect x="2" y="2" width="9" height="9" rx="2" fill="white"/>
+                    <rect x="13" y="2" width="9" height="9" rx="2" fill="white"/>
+                    <rect x="2" y="13" width="9" height="9" rx="2" fill="white"/>
+                    <rect x="13" y="13" width="9" height="9" rx="2" fill="white"/>
                   </svg>
                 </div>
               )}
@@ -332,8 +338,10 @@ export default function AskPragya({ open, onClose }: AskPragyaProps) {
             <div className="flex justify-start">
               <div className="w-7 h-7 rounded-full bg-gradient-to-br from-[#FF6A2D] to-[#ff4500] flex items-center justify-center mr-2 mt-1 shrink-0">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
-                  <path d="M12 2L13.09 8.26L19 6L14.74 10.91L21 12L14.74 13.09L19 18L13.09 15.74L12 22L10.91 15.74L5 18L9.26 13.09L3 12L9.26 10.91L5 6L10.91 8.26L12 2Z"
-                    stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  <rect x="2" y="2" width="9" height="9" rx="2" fill="white"/>
+                  <rect x="13" y="2" width="9" height="9" rx="2" fill="white"/>
+                  <rect x="2" y="13" width="9" height="9" rx="2" fill="white"/>
+                  <rect x="13" y="13" width="9" height="9" rx="2" fill="white"/>
                 </svg>
               </div>
               <div className="bg-[rgba(255,255,255,0.06)] border border-[rgba(255,255,255,0.08)] px-5 py-3 rounded-2xl rounded-bl-sm">
