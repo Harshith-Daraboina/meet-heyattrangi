@@ -103,51 +103,6 @@ async function callGroq(history: { role: string; content: string }[], userText: 
   return data.choices?.[0]?.message?.content ?? "Sorry, I couldn't generate a response.";
 }
 
-// ─── Speech Recognition hook ──────────────────────────────────────────────────
-
-function useSpeechRecognition(onTranscript: (t: string) => void) {
-  const recognitionRef = useRef<any>(null);
-  const [isListening, setIsListening] = useState(false);
-  const [supported, setSupported] = useState(false);
-
-  useEffect(() => {
-    const SpeechRecognition =
-      (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    setSupported(!!SpeechRecognition);
-    if (!SpeechRecognition) return;
-
-    const recognition = new SpeechRecognition();
-    recognition.continuous = true;
-    recognition.interimResults = false;
-    recognition.lang = "en-US";
-
-    recognition.onresult = (event: any) => {
-      const last = event.results[event.results.length - 1];
-      if (last.isFinal) {
-        onTranscript(last[0].transcript.trim());
-      }
-    };
-
-    recognition.onerror = () => setIsListening(false);
-    recognition.onend = () => setIsListening(false);
-
-    recognitionRef.current = recognition;
-  }, [onTranscript]);
-
-  const startListening = useCallback(() => {
-    if (!recognitionRef.current) return;
-    recognitionRef.current.start();
-    setIsListening(true);
-  }, []);
-
-  const stopListening = useCallback(() => {
-    if (!recognitionRef.current) return;
-    recognitionRef.current.stop();
-    setIsListening(false);
-  }, []);
-
-  return { isListening, supported, startListening, stopListening };
-}
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
@@ -173,13 +128,6 @@ export default function AskPragya({ open, onClose }: AskPragyaProps) {
     if (open) endRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, open]);
 
-  // Append transcript to input
-  const handleTranscript = useCallback((text: string) => {
-    setInput((prev) => (prev ? `${prev} ${text}` : text));
-  }, []);
-
-  const { isListening, supported, startListening, stopListening } =
-    useSpeechRecognition(handleTranscript);
 
   const sendMessage = useCallback(
     async (text: string) => {
@@ -306,7 +254,7 @@ export default function AskPragya({ open, onClose }: AskPragyaProps) {
               <p className="text-gray-400 text-sm leading-relaxed">
                 Hi! I'm <span className="text-[#FF6A2D] font-semibold">Pragya</span>, your AI assistant for this meeting. How can I help you today?
               </p>
-              <p className="text-gray-600 text-xs">You can type or use the mic to speak to me.</p>
+              <p className="text-gray-600 text-xs">You can type to speak to me.</p>
             </div>
           )}
 
@@ -359,12 +307,6 @@ export default function AskPragya({ open, onClose }: AskPragyaProps) {
 
         {/* Input Row */}
         <div className="px-4 py-4 border-t border-[rgba(255,106,45,0.12)] shrink-0">
-          {isListening && (
-            <div className="flex items-center gap-2 mb-2 px-3 py-1.5 bg-red-500/10 border border-red-500/20 rounded-xl">
-              <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse"/>
-              <span className="text-red-400 text-xs font-medium">Listening… speak now</span>
-            </div>
-          )}
           <div className="flex gap-2 items-end">
             <textarea
               rows={1}
@@ -376,26 +318,6 @@ export default function AskPragya({ open, onClose }: AskPragyaProps) {
               style={{ fieldSizing: "content" } as any}
               disabled={loading}
             />
-            {/* Mic Button */}
-            {supported && (
-              <button
-                onClick={isListening ? stopListening : startListening}
-                title={isListening ? "Stop listening" : "Start voice input"}
-                disabled={loading}
-                className={`p-3 rounded-2xl shrink-0 transition-all duration-200 border ${
-                  isListening
-                    ? "bg-red-500/20 border-red-500/50 text-red-400 shadow-[0_0_14px_rgba(239,68,68,0.3)] animate-pulse"
-                    : "bg-[rgba(255,255,255,0.06)] border-[rgba(255,255,255,0.1)] text-gray-400 hover:text-white hover:border-[rgba(255,255,255,0.2)]"
-                }`}
-              >
-                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
-                  <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
-                  <line x1="12" y1="19" x2="12" y2="23"/>
-                  <line x1="8" y1="23" x2="16" y2="23"/>
-                </svg>
-              </button>
-            )}
             {/* Send Button */}
             <button
               onClick={() => sendMessage(input)}

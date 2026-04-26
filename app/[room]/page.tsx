@@ -19,6 +19,10 @@ import {
   useSpeakingParticipants,
   useParticipants,
   useChat,
+  TrackToggle,
+  ChatToggle,
+  DisconnectButton,
+  MediaDeviceMenu,
 } from "@livekit/components-react";
 import "@livekit/components-styles";
 import { RoomEvent, Participant, Track } from "livekit-client";
@@ -46,8 +50,32 @@ function CustomConference({ isHost, isRecording, onStartRecording, onStopRecordi
   const activeSpeakers = useSpeakingParticipants();
   const participants = useParticipants();
   const [showParticipants, setShowParticipants] = useState(false);
+  const [showChat, setShowChat] = useState(false);
   const [showPragya, setShowPragya] = useState(false);
   const [lastSpeakerSid, setLastSpeakerSid] = useState<string | null>(null);
+  const [controlsVisible, setControlsVisible] = useState(true);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const resetTimer = () => {
+    setControlsVisible(true);
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    timeoutRef.current = setTimeout(() => {
+      setControlsVisible(false);
+    }, 5000);
+  };
+
+  useEffect(() => {
+    window.addEventListener("mousemove", resetTimer);
+    window.addEventListener("mousedown", resetTimer);
+    window.addEventListener("touchstart", resetTimer);
+    resetTimer();
+    return () => {
+      window.removeEventListener("mousemove", resetTimer);
+      window.removeEventListener("mousedown", resetTimer);
+      window.removeEventListener("touchstart", resetTimer);
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    };
+  }, []);
 
   useEffect(() => {
     if (activeSpeakers.length > 0) {
@@ -56,7 +84,7 @@ function CustomConference({ isHost, isRecording, onStartRecording, onStopRecordi
   }, [activeSpeakers]);
 
   const isScreenSharing = screenTracks.length > 0;
-  
+
   let focusTrack: any = pinnedTracks[0];
   if (!focusTrack && activeSpeakers.length > 0) {
     focusTrack = cameraTracks.find((t) => t.participant.sid === activeSpeakers[0].sid);
@@ -65,11 +93,10 @@ function CustomConference({ isHost, isRecording, onStartRecording, onStopRecordi
     focusTrack = cameraTracks.find((t) => t.participant.sid === lastSpeakerSid);
   }
   if (!focusTrack && cameraTracks.length > 0) {
-    focusTrack = cameraTracks.find((t) => !t.participant.isLocal) || cameraTracks[0]; 
+    focusTrack = cameraTracks.find((t) => !t.participant.isLocal) || cameraTracks[0];
   }
 
   const isFocusing = focusTrack !== undefined && participants.length > 1;
-  const showChat = widget.state?.showChat;
 
   const isMobile = typeof window !== "undefined" && /Android|iPhone|iPad/i.test(navigator.userAgent);
 
@@ -106,16 +133,16 @@ function CustomConference({ isHost, isRecording, onStartRecording, onStopRecordi
         )}
       </div>
 
-      <div className={`absolute top-0 right-0 h-[calc(100%-72px)] w-full sm:w-[350px] glass-panel z-50 overflow-hidden transition-all duration-300 ease-in-out transform ${showChat ? "translate-x-0 opacity-100" : "translate-x-full opacity-0 pointer-events-none"}`}>
+      <div className={`absolute top-0 left-0 h-full w-full sm:w-[350px] glass-panel-left z-50 overflow-hidden transition-all duration-300 ease-in-out transform ${showChat ? "translate-x-0 opacity-100" : "-translate-x-full opacity-0 pointer-events-none"}`}>
         <Chat />
       </div>
 
-      <div className={`absolute top-0 right-0 h-[calc(100%-72px)] w-full sm:w-[320px] glass-panel z-[45] flex flex-col overflow-hidden transition-all duration-300 ease-in-out transform ${showParticipants ? "translate-x-0 opacity-100" : "translate-x-full opacity-0 pointer-events-none"}`}>
+      <div className={`absolute top-0 right-0 h-full w-full sm:w-[320px] glass-panel z-[45] flex flex-col overflow-hidden transition-all duration-300 ease-in-out transform ${showParticipants ? "translate-x-0 opacity-100" : "translate-x-full opacity-0 pointer-events-none"}`}>
         <div className="p-4 border-b border-[rgba(255,255,255,0.08)] flex items-center justify-between shrink-0">
           <h3 className="font-bold text-lg text-white tracking-tight">Participants ({participants.length})</h3>
           <button onClick={() => setShowParticipants(false)} className="text-gray-400 hover:text-white transition-colors p-1 rounded-md hover:bg-[rgba(255,255,255,0.1)]">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
           </button>
         </div>
@@ -135,45 +162,59 @@ function CustomConference({ isHost, isRecording, onStartRecording, onStopRecordi
 
       <AskPragya open={showPragya} onClose={() => setShowPragya(false)} />
 
-      <div className="h-[72px] shrink-0 bg-black border-t border-[#333] flex items-center justify-center gap-4 z-[100] relative">
-        <div className="flex items-center justify-center mr-2">
-          <button
-            onClick={isRecording ? onStopRecording : onStartRecording}
-            className={`flex items-center gap-2 px-3 py-2 rounded-md font-semibold transition-colors ${isRecording ? "bg-red-600 hover:bg-red-700 text-white animate-pulse" : "bg-[#1f1f1f] hover:bg-[#2f2f2f] text-white border border-[#333]"}`}
-            title={isRecording ? "Stop Recording" : "Start Recording"}
-          >
-            <div className={`w-3 h-3 rounded-full ${isRecording ? "bg-white" : "bg-red-500"}`} />
-            <span className="text-sm">{isRecording ? "REC" : "Record"}</span>
-          </button>
-        </div>
+      <div className={`floating-control-bar ${controlsVisible ? '' : 'hidden'}`}>
+        <button
+          onClick={isRecording ? onStopRecording : onStartRecording}
+          className={`flex items-center justify-center w-11 h-11 rounded-xl transition-all duration-300 ${isRecording ? "bg-red-600 animate-pulse" : "bg-white/5 border border-white/10 hover:bg-white/10"}`}
+          title={isRecording ? "Stop Recording" : "Start Recording"}
+        >
+          <div className={`w-3 h-3 rounded-full ${isRecording ? "bg-white" : "bg-red-500"}`} />
+        </button>
 
-        <div className="flex flex-1 items-center justify-center gap-2">
-          <ControlBar controls={{ screenShare: !isMobile, microphone: true, camera: true, chat: true, leave: false }} />
-          <button onClick={() => setShowParticipants(!showParticipants)} className="px-3 py-2 rounded-lg font-semibold bg-[#1f1f1f] hover:bg-[#2f2f2f] text-white border border-[#333] flex items-center gap-2 transition-all duration-200">
-             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z" fill="currentColor"/></svg>
-             <span className="hidden sm:inline">People</span>
-             <div className="px-1.5 py-0.5 bg-[#333] rounded-md text-[11px] font-bold ml-1">{participants.length}</div>
-          </button>
-          <button onClick={() => setShowPragya(!showPragya)} title="Ask Pragya – AI Assistant" className={`flex items-center gap-2 px-3 py-2 rounded-lg font-semibold transition-all duration-300 border ${showPragya ? "bg-[#FF6A2D]/20 border-[#FF6A2D]/60 text-[#FF6A2D] shadow-[0_0_18px_rgba(255,106,45,0.35)]" : "bg-[#1a1a1a] hover:bg-[#2a2a2a] border-[#FF6A2D]/40 text-[#FF6A2D] hover:shadow-[0_0_14px_rgba(255,106,45,0.25)]"}`}>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <rect x="2" y="2" width="9" height="9" rx="2" fill="currentColor"/>
-              <rect x="13" y="2" width="9" height="9" rx="2" fill="currentColor"/>
-              <rect x="2" y="13" width="9" height="9" rx="2" fill="currentColor"/>
-              <rect x="13" y="13" width="9" height="9" rx="2" fill="currentColor"/>
-            </svg>
-            <span className="hidden sm:inline text-sm">Ask Pragya</span>
-          </button>
-
-          <button onClick={() => room.disconnect()} className="flex items-center gap-2 px-4 py-2 rounded-lg font-bold bg-red-500 hover:bg-red-600 text-white shadow-lg shadow-red-500/20 transition-all duration-200 active:scale-95 ml-2">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-            <span className="hidden sm:inline">Leave</span>
-          </button>
+        <div className="flex items-center">
+          <TrackToggle source={Track.Source.Microphone} showIcon={true} />
+          <MediaDeviceMenu kind="audioinput" />
         </div>
-
-        <div className="absolute right-6 top-1/2 -translate-y-1/2 hidden md:flex flex-col items-end pointer-events-none opacity-80">
-          <span className="text-white font-bold text-lg leading-tight tracking-wide">Hey Attrangi</span>
-          <span className="text-gray-400 text-[10px] tracking-wider uppercase">well monitored therapy platform</span>
+        <div className="flex items-center">
+          <TrackToggle source={Track.Source.Camera} showIcon={true} />
+          <MediaDeviceMenu kind="videoinput" />
         </div>
+        <TrackToggle source={Track.Source.ScreenShare} showIcon={true} />
+        <button 
+          onClick={() => setShowChat(!showChat)} 
+          className={`w-11 h-11 rounded-xl transition-all duration-200 flex items-center justify-center border ${showChat ? 'bg-white/20 border-white/40' : 'bg-white/5 border-white/10 hover:bg-white/10'}`}
+          title="Toggle Chat"
+        >
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z" fill="currentColor"/></svg>
+        </button>
+        
+        <button onClick={() => setShowParticipants(!showParticipants)} className="w-11 h-11 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 flex items-center justify-center transition-all duration-200 relative">
+           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z" fill="currentColor"/></svg>
+           <div className="absolute -top-1 -right-1 px-1.5 py-0.5 bg-white/20 backdrop-blur-md rounded-full text-[10px] font-bold border border-white/10 badge">{participants.length}</div>
+        </button>
+
+        <button onClick={() => setShowPragya(!showPragya)} title="Ask Pragya" className={`w-11 h-11 rounded-xl transition-all duration-300 border ${showPragya ? "bg-[#FF6A2D]/20 border-[#FF6A2D]/60 text-[#FF6A2D]" : "bg-white/5 hover:bg-white/10 border-white/10 text-[#FF6A2D]"}`}>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="2" y="2" width="9" height="9" rx="2" fill="currentColor"/>
+            <rect x="13" y="2" width="9" height="9" rx="2" fill="currentColor"/>
+            <rect x="2" y="13" width="9" height="9" rx="2" fill="currentColor"/>
+            <rect x="13" y="13" width="9" height="9" rx="2" fill="currentColor"/>
+          </svg>
+        </button>
+
+        <button onClick={() => room.disconnect()} className="w-11 h-11 rounded-xl bg-red-500 hover:bg-red-600 text-white flex items-center justify-center transition-all duration-200 active:scale-95">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        </button>
+      </div>
+
+      <div className={`absolute bottom-6 right-8 hidden md:flex flex-col items-end pointer-events-none transition-opacity duration-500 ${controlsVisible ? 'opacity-60' : 'opacity-10'}`}>
+        <div className="flex items-center gap-2 mb-0.5">
+          <img src="/images/logo.png" alt="Logo" className="h-5 w-auto" />
+          <h2 className="text-xl font-bold tracking-tight bg-gradient-to-r from-[#FF6A2D] to-[#FF2D55] bg-clip-text text-transparent">
+            hey attrangi
+          </h2>
+        </div>
+        <span className="text-gray-400 text-[9px] tracking-[0.2em] uppercase font-bold">track. understand. feel better.</span>
       </div>
     </div>
   );
