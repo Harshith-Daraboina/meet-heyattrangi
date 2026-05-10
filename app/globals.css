@@ -84,6 +84,65 @@ body {
   z-index: 1000;
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
   transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  /* Prevent overflow on small screens */
+  max-width: calc(100vw - 16px);
+  box-sizing: border-box;
+}
+
+/* 📱 Mobile responsiveness for control bar */
+@media (max-width: 480px) {
+  .floating-control-bar {
+    bottom: 16px;
+    padding: 6px 8px;
+    gap: 4px;
+    border-radius: 16px;
+    /* Allow slight overflow to scroll if needed */
+    overflow-x: auto;
+    overflow-y: hidden;
+    /* Scroll instead of clipping */
+    justify-content: flex-start;
+    /* Ensure it doesn't go wider than screen */
+    max-width: calc(100vw - 12px);
+    /* Hide scrollbar but keep functionality */
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  .floating-control-bar::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Shrink buttons on mobile */
+  .floating-control-bar > .lk-button,
+  .floating-control-bar > button {
+    width: 36px !important;
+    height: 36px !important;
+    min-width: 36px !important;
+    flex-shrink: 0;
+  }
+
+  /* Shrink grouped controls */
+  .floating-control-bar > .flex {
+    height: 36px !important;
+    flex-shrink: 0;
+  }
+
+  .floating-control-bar > .flex > .lk-button:first-child {
+    width: 36px !important;
+  }
+
+  .floating-control-bar > .flex > .lk-button:last-child,
+  .floating-control-bar > .flex > .lk-device-menu-button {
+    width: 24px !important;
+    min-width: 24px !important;
+  }
+
+  /* Shrink SVG icons on mobile */
+  .floating-control-bar .lk-button svg,
+  .floating-control-bar .lk-button .lk-button-icon {
+    width: 16px !important;
+    height: 16px !important;
+  }
 }
 
 .floating-control-bar.hidden {

@@ -162,38 +162,38 @@ function CustomConference({ isHost, isRecording, onStartRecording, onStopRecordi
 
       <AskPragya open={showPragya} onClose={() => setShowPragya(false)} />
 
-      <div className={`floating-control-bar ${controlsVisible ? '' : 'hidden'}`}>
+      <div className="floating-control-bar">
         <button
           onClick={isRecording ? onStopRecording : onStartRecording}
-          className={`flex items-center justify-center w-11 h-11 rounded-xl transition-all duration-300 ${isRecording ? "bg-red-600 animate-pulse" : "bg-white/5 border border-white/10 hover:bg-white/10"}`}
+          className={`flex items-center justify-center w-11 h-11 shrink-0 rounded-xl transition-all duration-300 ${isRecording ? "bg-red-600 animate-pulse" : "bg-white/5 border border-white/10 hover:bg-white/10"}`}
           title={isRecording ? "Stop Recording" : "Start Recording"}
         >
           <div className={`w-3 h-3 rounded-full ${isRecording ? "bg-white" : "bg-red-500"}`} />
         </button>
 
-        <div className="flex items-center">
+        <div className="flex items-center shrink-0">
           <TrackToggle source={Track.Source.Microphone} showIcon={true} />
           <MediaDeviceMenu kind="audioinput" />
         </div>
-        <div className="flex items-center">
+        <div className="flex items-center shrink-0">
           <TrackToggle source={Track.Source.Camera} showIcon={true} />
           <MediaDeviceMenu kind="videoinput" />
         </div>
         <TrackToggle source={Track.Source.ScreenShare} showIcon={true} />
         <button 
           onClick={() => setShowChat(!showChat)} 
-          className={`w-11 h-11 rounded-xl transition-all duration-200 flex items-center justify-center border ${showChat ? 'bg-white/20 border-white/40' : 'bg-white/5 border-white/10 hover:bg-white/10'}`}
+          className={`w-11 h-11 shrink-0 rounded-xl transition-all duration-200 flex items-center justify-center border ${showChat ? 'bg-white/20 border-white/40' : 'bg-white/5 border-white/10 hover:bg-white/10'}`}
           title="Toggle Chat"
         >
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z" fill="currentColor"/></svg>
         </button>
         
-        <button onClick={() => setShowParticipants(!showParticipants)} className="w-11 h-11 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 flex items-center justify-center transition-all duration-200 relative">
+        <button onClick={() => setShowParticipants(!showParticipants)} className="w-11 h-11 shrink-0 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 flex items-center justify-center transition-all duration-200 relative">
            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z" fill="currentColor"/></svg>
            <div className="absolute -top-1 -right-1 px-1.5 py-0.5 bg-white/20 backdrop-blur-md rounded-full text-[10px] font-bold border border-white/10 badge">{participants.length}</div>
         </button>
 
-        <button onClick={() => setShowPragya(!showPragya)} title="Ask Pragya" className={`w-11 h-11 rounded-xl transition-all duration-300 border ${showPragya ? "bg-[#FF6A2D]/20 border-[#FF6A2D]/60 text-[#FF6A2D]" : "bg-white/5 hover:bg-white/10 border-white/10 text-[#FF6A2D]"}`}>
+        <button onClick={() => setShowPragya(!showPragya)} title="Ask Pragya" className={`w-11 h-11 shrink-0 rounded-xl transition-all duration-300 border ${showPragya ? "bg-[#FF6A2D]/20 border-[#FF6A2D]/60 text-[#FF6A2D]" : "bg-white/5 hover:bg-white/10 border-white/10 text-[#FF6A2D]"}`}>
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
             <rect x="2" y="2" width="9" height="9" rx="2" fill="currentColor"/>
             <rect x="13" y="2" width="9" height="9" rx="2" fill="currentColor"/>
@@ -202,7 +202,7 @@ function CustomConference({ isHost, isRecording, onStartRecording, onStopRecordi
           </svg>
         </button>
 
-        <button onClick={() => room.disconnect()} className="w-11 h-11 rounded-xl bg-red-500 hover:bg-red-600 text-white flex items-center justify-center transition-all duration-200 active:scale-95">
+        <button onClick={() => room.disconnect()} className="w-11 h-11 shrink-0 rounded-xl bg-red-500 hover:bg-red-600 text-white flex items-center justify-center transition-all duration-200 active:scale-95">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
         </button>
       </div>

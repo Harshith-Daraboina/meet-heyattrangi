@@ -11,6 +11,10 @@ export async function POST(req) {
     metadata: JSON.stringify({ isHost }),
   });
 
+  console.log("Token generation request:", at)
+  console.log("Token generation request:", roomName)
+  console.log("Token generation request:", userName)
+  console.log("Token generation request:", isHost)
   at.addGrant({
     room: roomName,
     roomJoin: true,

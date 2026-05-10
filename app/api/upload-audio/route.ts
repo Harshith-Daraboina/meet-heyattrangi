@@ -42,7 +42,7 @@ export async function POST(req: Request) {
 
         // 2. Trigger main app's recording and transcription flow
         try {
-            const appUrl = process.env.NEXT_PUBLIC_MAIN_APP_URL || "http://localhost:3001";
+            const appUrl = process.env.NEXT_PUBLIC_MAIN_APP_URL || "http://localhost:3000";
             console.log(`Triggering recording flow at: ${appUrl}/api/appointments/${roomName}/recording`);
             await fetch(`${appUrl}/api/appointments/${roomName}/recording`, {
                 method: "POST",
